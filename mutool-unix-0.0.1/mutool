@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# Merge and Upload Tool for Arduino Core nRF52 boards
+#
+# Copyright (c) 2017, Arduino Srl <swdev@arduino.org>
+#
+# @author Sergio Tomasello <sergio@arduino.org>
+# @licence MIT License
+#
+# Usage:
+# ./mutool -u <path-to-openocd-bin> -s <path-to-openocd-scripts> -t <path-to-openocd-board-script-file> -m <path-to-mergehex-bin> -f <[files-to-merges]>
+#
+
+APP="Merge & Upload Tool"
+VERSION="0.0.1"
+
+echo $APP" v"$VERSION
+
+while getopts "u::s::t::m::f::" opt
+  do
+    case $opt in
+      u)
+        if [ -f "$OPTARG" ];
+          then OPENOCD_BIN=$OPTARG
+          else
+            echo "Cannot find OpenOCD binary file: $OPTARG"
+            exit 1
+        fi;;
+      s)
+        if [ -d "$OPTARG" ];
+          then OPENOCD_SCRIPT_PATH=$OPTARG
+          else
+            echo "Cannot find OpenOCD script path: $OPTARG"
+            exit 1
+        fi;;
+      t)
+        if [ -f "$OPTARG" ];
+          then OPENOCD_VARIANT_SCRIPT=$OPTARG
+          else
+            echo "Cannot find OpenOCD script: $OPTARG"
+            exit 1
+        fi;;
+      m)
+        if [ -f "$OPTARG" ];
+          then MERGE_TOOL=$OPTARG
+          else
+            echo "Cannot find Merge Tool: $OPTARG"
+            exit 1
+        fi;;
+      f)
+          shift $(( OPTIND - 2 ))
+          #echo $@
+          for file in "$@"; do
+            if [ -f "$file" ];
+              then	FILES_STR_CMD=$FILES_STR_CMD" "$file #forse non serve
+              else
+                echo "Cannot find file: $file"
+                exit 1
+            fi
+          done
+          FILES=$@;;
+    esac
+done
+
+# echo $OPENOCD_BIN
+# echo $OPENOCD_SCRIPT_PATH
+# echo $OPENOCD_VARIANT_SCRIPT
+# echo $MERGE_TOOL
+# echo $FILES_STR_CMD
+# echo $FILES
+
+if [ -z $OPENOCD_BIN ]; then
+  echo "-u | required: please specify OpenOCD binary file"
+  exit 1
+fi
+
+if [ -z $OPENOCD_SCRIPT_PATH ]; then
+  echo "-u | required: please specify OpenOCD script path"
+  exit 1
+fi
+
+if [ -z $OPENOCD_VARIANT_SCRIPT ]; then
+  echo "-m | required: please specify OpenOCD board script file"
+  exit 1
+fi
+
+if [ -z $MERGE_TOOL ]; then
+  echo "-m | please specify the merge tool binary path"
+  exit 1
+fi
+
+if [ -z "$FILES" ]; then
+  echo "-f | required: please specify the files to use"
+  exit 1
+fi
+
+TEMP_DIR=`mktemp -d`
+TEMP_FILE="output.hex"
+echo "merging hex files..."
+$MERGE_TOOL --merge $FILES_STR_CMD --output "$TEMP_DIR/$TEMP_FILE" --quiet
+echo "$TEMP_DIR/$TEMP_FILE"
+
+echo "uploading..."
+$OPENOCD_BIN -s "$OPENOCD_SCRIPT_PATH" -f "$OPENOCD_VARIANT_SCRIPT" -c "program $TEMP_DIR/$TEMP_FILE verify reset exit"
+
+exit 0
