@@ -42,7 +42,9 @@
 	Exit /b 1
 
 :FLASH
-	set OUTPUT_FILE=%TEMP%\output.hex
+	:: replacing backslash with slash
+	set "OUTPUT_FILE=%TEMP%/output.hex"
+	set "OUTPUT_FILE=%OUTPUT_FILE:\=/%"
 
 	%MERGE_TOOL% --merge %FILE_1% %FILE_2% %FILE_3% --output %OUTPUT_FILE% --quiet
 
@@ -50,4 +52,4 @@
 	ECHO "uploading..."
 	ECHO.
 
-	"%OPENOCD_BIN%" -s "%OPENOCD_SCRIPT_PATH%" -f "%OPENOCD_VARIANT_SCRIPT%" -c "program %OUPUT_FILE% verify reset exit"
+	"%OPENOCD_BIN%" -s "%OPENOCD_SCRIPT_PATH%" -f "%OPENOCD_VARIANT_SCRIPT%" -c "program %OUTPUT_FILE% verify reset exit"
