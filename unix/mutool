@@ -75,12 +75,12 @@ if [ -z $OPENOCD_BIN ]; then
 fi
 
 if [ -z $OPENOCD_SCRIPT_PATH ]; then
-  echo "-u | required: please specify OpenOCD script path"
+  echo "-s | required: please specify OpenOCD script path"
   exit 1
 fi
 
 if [ -z $OPENOCD_VARIANT_SCRIPT ]; then
-  echo "-m | required: please specify OpenOCD board script file"
+  echo "-t | required: please specify OpenOCD board script file"
   exit 1
 fi
 
