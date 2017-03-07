@@ -94,7 +94,17 @@ if [ -z "$FILES" ]; then
   exit 1
 fi
 
-TEMP_DIR=`mktemp -d`
+UNAME=$(uname -s)
+
+case $UNAME in
+    'Darwin')
+        TEMP_DIR=`mktemp -dt arduino_build`
+        ;;
+    'Linux')
+        TEMP_DIR=`mktemp -dt arduino_build.XXXXXXX`
+        ;;
+esac
+
 TEMP_FILE="output.hex"
 echo "merging hex files..."
 $MERGE_TOOL --merge $FILES_STR_CMD --output "$TEMP_DIR/$TEMP_FILE" --quiet
